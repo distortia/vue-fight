@@ -8,5 +8,5 @@ You vs a monster
 * Download repo
 * load in browser
 * ????
-* Win!....or lose ¯\_(ツ)_/¯
+* Win!....or lose ¯\\_(ツ)_/¯
 
