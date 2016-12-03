@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Monster Slayer</title>
+    <script src="https://npmcdn.com/vue/dist/vue.js"></script>
+    <link rel="stylesheet" href="foundation.min.css">
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div id="app">
+    <section class="row">
+        <div class="small-6 columns">
+            <h1 class="text-center">YOU</h1>
+            <div class="healthbar">
+                <div    class="healthbar text-center" 
+                        style="background-color: green; margin: 0; color: white;" 
+                        v-bind:style="{width: myHp + '%'}">
+                    {{ myHp }}
+                </div>
+            </div>
+        </div>
+        <div class="small-6 columns">
+            <h1 class="text-center">MONSTER</h1>
+            <div class="healthbar">
+                <div    class="healthbar text-center" 
+                        style="background-color: green; margin: 0; color: white;" 
+                        v-bind:style="{width: monsterHp + '%'}">
+                    {{ monsterHp }}
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="row controls" v-if="!gameStarted">
+        <div class="small-12 columns">
+            <button id="start-game" @click="startGame">START NEW GAME</button>
+        </div>
+    </section>
+    <section class="row controls" v-else>
+        <div class="small-12 columns">
+            <h3 style="text-align: center">Controls</h3>
+            <button id="attack" @click="attack">ATTACK</button>
+            <button id="special-attack" @click="specialAttack">SPECIAL ATTACK</button>
+            <button id="heal" @click="heal">HEAL</button>
+            <button id="give-up" @click="endGame('¯\\_(ツ)_/¯ Well you tried... ')">GIVE UP</button>
+        </div>
+    </section>
+    <section class="row log">
+        <div class="small-12 columns">
+            <h3 style="text-align: center;">Battle Feed</h3>
+            <ul>
+                <li v-for="event in battleFeed">
+                    <span :class="event.type">{{event.message}}</span>
+                </li>
+            </ul>
+        </div>
+    </section>
+</div>
+<script>
+vm = new Vue({
+    el: '#app',
+    data: {
+        gameStarted: false,
+        myHp: 100,
+        monsterHp: 100,
+        maxHp: 100,
+        minHp: 0,
+        monsterMinAttack: 1,
+        monsterMaxAttack: 7,
+        myMinAttack: 1,
+        myMaxAttack: 5,
+        mySpecialMultiplier: Math.random(),
+        mySpecialMinAttack: 7,
+        mySpecialMaxAttack: 10,
+        myHealMax: 3,
+        myHealMin: 10,
+        battleFeed: [],
+    },
+    methods: {
+        startGame: function() {
+            this.gameStarted = true;
+        },
+        endGame: function(message) {
+            alert(message);
+            this.gameStarted = false;
+            this.myHp = 100;
+            this.monsterHp = 100;
+            this.battleFeed = [];
+        },
+        attackValue: function(min, max, multiplier = 0) {
+            var baseAttack = Math.floor(Math.random() * (max - min + 1)) + min
+            return baseAttack + Math.ceil(baseAttack * multiplier);
+        },
+        damageMonster: function(multiplier = 0) {
+            var damageToMonster = this.attackValue(this.myMinAttack, this.myMaxAttack, multiplier);
+            this.monsterHp = this.monsterHp - damageToMonster;
+            this.updateBattleFeed({"type": "player-turn", message: "You dealt " + damageToMonster + " damage to the monster!"});
+        },
+        damageMe: function() {
+            var damageToMe = this.attackValue(this.monsterMinAttack, this.monsterMaxAttack);
+            this.myHp = this.myHp - damageToMe;
+            this.updateBattleFeed({"type": "monster-turn", message: "The monster hit you for " + damageToMe + "!"});
+        },
+        attack: function() {
+            this.damageMonster();
+            this.damageMe();
+            this.gameOver();
+        },
+        specialAttack: function() {
+            // Special Attacks use the special multiplier to enhance them
+            this.damageMonster(this.mySpecialMultiplier);
+            this.damageMe();
+            this.gameOver();
+        },
+        heal: function() {
+            if(this.myHp >= 100) {
+                this.updateBattleFeed({"type": "player-turn", message: "You are at max hp"});
+               } else {
+                var healAmount = Math.floor(Math.random() * (this.myHealMax - this.myHealMin + 1)) + this.myHealMin;
+                this.myHp = this.myHp + healAmount;
+                this.updateBattleFeed({"type": "player-turn", message: "You healed for " + healAmount + "!"});
+                this.damageMe();
+            }
+        },
+        updateBattleFeed: function(message) {
+            this.battleFeed.unshift(message);
+        },
+        gameOver: function() {
+            if(this.monsterHp <= this.minHp) {
+                this.endGame("Hey! You did the thing!");
+            }
+            if (this.myHp <= this.minHp) {
+                this.endGame("I'd say you tried, but I don't want to assume...");
+            }
+        }
+    }
+});
+</script>
+</body>
+</html>
